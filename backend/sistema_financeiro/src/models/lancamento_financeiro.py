@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import uuid
-from src.models.contrato import db
+from src.models.paciente import db
 from src.models.fornecedor import Fornecedor
 
 class LancamentoFinanceiro(db.Model):
@@ -17,8 +17,12 @@ class LancamentoFinanceiro(db.Model):
     status = db.Column(db.String(20), nullable=False, default='pendente')  # 'pendente', 'pago', 'cancelado'
     numero_nota_fiscal = db.Column(db.String(50), nullable=True)
     observacoes = db.Column(db.Text, nullable=True)
+    forma_pagamento = db.Column(db.String(55), nullable=True)
+    natureza_id = db.Column(db.Integer, db.ForeignKey('natureza_orcamentaria.id'), nullable=False)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    natureza = db.relationship('Natureza', backref='lancamentos_financeiros_natureza', lazy=True)
     
     def __repr__(self):
         return f'<LancamentoFinanceiro {self.id} - {self.tipo}>'

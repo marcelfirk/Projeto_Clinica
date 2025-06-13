@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from src.models.lancamento_financeiro import LancamentoFinanceiro, db
 from src.models.contrato import Contrato
 from src.models.fornecedor import Fornecedor
+from src.models.natureza_orcamentaria import Natureza
 from datetime import datetime
 
 lancamentos_bp = Blueprint('lancamentos', __name__)
@@ -28,6 +29,9 @@ def listar_lancamentos():
             "status": lancamento.status,
             "numero_nota_fiscal": lancamento.numero_nota_fiscal,
             "observacoes": lancamento.observacoes,
+            "forma_pagamento": lancamento.forma_pagamento,
+            "natureza_id": lancamento.natureza_id,
+            "natureza_nome": lancamento.natureza.nome if lancamento.natureza else None,
             "data_criacao": lancamento.data_criacao.isoformat(),
             "data_atualizacao": lancamento.data_atualizacao.isoformat()
         })
@@ -56,6 +60,9 @@ def obter_lancamento(id):
         "status": lancamento.status,
         "numero_nota_fiscal": lancamento.numero_nota_fiscal,
         "observacoes": lancamento.observacoes,
+        "forma_pagamento": lancamento.forma_pagamento,
+        "natureza_id": lancamento.natureza_id,
+        "natureza_nome": lancamento.natureza.nome if lancamento.natureza else None,
         "data_criacao": lancamento.data_criacao.isoformat(),
         "data_atualizacao": lancamento.data_atualizacao.isoformat()
     }), 200
@@ -112,13 +119,19 @@ def criar_lancamento():
         return jsonify({"msg": "Valor deve ser um número"}), 400
     
     data_pagamento_str = request.json.get('data_pagamento')
-    data_pagamento = None  # valor padrão
+    data_pagamento = None  
 
     if data_pagamento_str:
         try:
             data_pagamento = datetime.fromisoformat(data_pagamento_str.replace('Z', '+00:00'))
         except ValueError:
             return jsonify({"msg": "Formato de data inválido. Use ISO 8601 (YYYY-MM-DD)"}), 400
+        
+    natureza_id = request.json.get('natureza_id')
+    if natureza_id:
+        natureza = Natureza.query.get(natureza_id)
+    if not natureza:
+        return jsonify({"msg": "Natureza não encontrada"}), 404
     
     # Cria novo lançamento
     novo_lancamento = LancamentoFinanceiro(
@@ -129,8 +142,10 @@ def criar_lancamento():
         data_pagamento=data_pagamento,
         valor=valor,
         status=request.json.get('status', 'pendente'),
+        forma_pagamento=request.json.get('forma_pagamento'),
         numero_nota_fiscal=request.json.get('numero_nota_fiscal'),
-        observacoes=request.json.get('observacoes')
+        observacoes=request.json.get('observacoes'),
+        natureza_id=natureza_id
     )
     
     # Valida regras de negócio
@@ -154,8 +169,11 @@ def criar_lancamento():
             "status": novo_lancamento.status,
             "numero_nota_fiscal": novo_lancamento.numero_nota_fiscal,
             "observacoes": novo_lancamento.observacoes,
+            "forma_pagamento": novo_lancamento.forma_pagamento,
             "data_criacao": novo_lancamento.data_criacao.isoformat(),
-            "data_atualizacao": novo_lancamento.data_atualizacao.isoformat()
+            "data_atualizacao": novo_lancamento.data_atualizacao.isoformat(),
+            "natureza_id": novo_lancamento.natureza_id,
+            "natureza_nome": novo_lancamento.natureza.nome if novo_lancamento.natureza else None
         }
     }), 201
 
@@ -218,6 +236,14 @@ def atualizar_lancamento(id):
     
     if 'observacoes' in request.json:
         lancamento.observacoes = request.json['observacoes']
+
+    if 'natureza_id' in request.json:
+        natureza_id = request.json['natureza_id']
+    if natureza_id:
+        natureza = Natureza.query.get(natureza_id)
+        if not natureza:
+            return jsonify({"msg": "Natureza não encontrada"}), 404
+    lancamento.natureza_id = natureza_id
     
     # Valida regras de negócio
     valido, mensagem = lancamento.validar()
@@ -239,8 +265,11 @@ def atualizar_lancamento(id):
             "status": lancamento.status,
             "numero_nota_fiscal": lancamento.numero_nota_fiscal,
             "observacoes": lancamento.observacoes,
+            "forma_pagamento": lancamento.forma_pagamento,
             "data_criacao": lancamento.data_criacao.isoformat(),
-            "data_atualizacao": lancamento.data_atualizacao.isoformat()
+            "data_atualizacao": lancamento.data_atualizacao.isoformat(),
+            "natureza_id": lancamento.natureza_id,
+            "natureza_nome": lancamento.natureza.nome if lancamento.natureza else None
         }
     }), 200
 
@@ -281,8 +310,11 @@ def listar_lancamentos_por_contrato(contrato_id):
             "status": lancamento.status,
             "numero_nota_fiscal": lancamento.numero_nota_fiscal,
             "observacoes": lancamento.observacoes,
+            "forma_pagamento": lancamento.forma_pagamento,
             "data_criacao": lancamento.data_criacao.isoformat(),
-            "data_atualizacao": lancamento.data_atualizacao.isoformat()
+            "data_atualizacao": lancamento.data_atualizacao.isoformat(),
+            "natureza_id": lancamento.natureza_id,
+            "natureza_nome": lancamento.natureza.nome if lancamento.natureza else None
         })
     
     return jsonify(resultado), 200
@@ -310,6 +342,7 @@ def listar_lancamentos_por_fornecedor(fornecedor_id):
             "status": lancamento.status,
             "numero_nota_fiscal": lancamento.numero_nota_fiscal,
             "observacoes": lancamento.observacoes,
+            "forma_pagamento": lancamento.forma_pagamento,
             "data_criacao": lancamento.data_criacao.isoformat(),
             "data_atualizacao": lancamento.data_atualizacao.isoformat()
         })

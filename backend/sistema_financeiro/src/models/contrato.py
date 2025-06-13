@@ -9,15 +9,16 @@ class Contrato(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     identificador_contrato = db.Column(db.String(50), unique=True, nullable=False)
     paciente_id = db.Column(db.Integer, db.ForeignKey('pacientes.id'), nullable=False)
-    procedimento = db.Column(db.String(255), nullable=False)
-    data_procedimento = db.Column(db.Date, nullable=False)
-    local_realizacao = db.Column(db.String(255), nullable=False)
-    valor_total = db.Column(db.Numeric(10, 2), nullable=False)
+    agendamento_id = db.Column(db.Integer, db.ForeignKey('agendamentos.id'), nullable=True)
     status = db.Column(db.String(20), nullable=False, default='ativo')
+    valor_sinal = db.Column(db.Float, nullable=True)
+    valor_restante = db.Column(db.Float, nullable=True)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     lancamentos = db.relationship('LancamentoFinanceiro', backref='contrato', lazy=True)
+    agendamento = db.relationship('Agendamento', backref='contrato_agendamento', lazy=True)
+    paciente = db.relationship('Paciente', back_populates='contratos')
     
     def __repr__(self):
         return f'<Contrato {self.identificador_contrato}>'

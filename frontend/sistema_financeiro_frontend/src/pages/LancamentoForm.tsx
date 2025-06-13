@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { lancamentoService, contratoService, fornecedorService } from '../services/api';
+import { lancamentoService, contratoService, fornecedorService, naturezaService } from '../services/api';
 
 const LancamentoForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,16 +12,19 @@ const LancamentoForm: React.FC = () => {
     tipo: 'a_receber',
     contrato_id: '',
     fornecedor_id: '',
+    natureza_id: '',
     data_vencimento: '',
     data_pagamento: '',
     valor: '',
     status: 'pendente',
     numero_nota_fiscal: '',
+    forma_pagamento: '',
     observacoes: ''
   });
   
   const [contratos, setContratos] = useState<any[]>([]);
   const [fornecedores, setFornecedores] = useState<any[]>([]);
+  const [naturezas, setNaturezas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -32,13 +35,15 @@ const LancamentoForm: React.FC = () => {
         setLoading(true);
         
         // Busca listas de contratos e fornecedores
-        const [contratosData, fornecedoresData] = await Promise.all([
+        const [contratosData, fornecedoresData, naturezasData] = await Promise.all([
           contratoService.getAll(),
-          fornecedorService.getAll()
+          fornecedorService.getAll(),
+          naturezaService.getAll() // novo serviço
         ]);
-        
+
         setContratos(contratosData);
         setFornecedores(fornecedoresData);
+        setNaturezas(naturezasData);
         
         // Se estiver editando, busca dados do lançamento
         if (isEditing) {
@@ -52,10 +57,12 @@ const LancamentoForm: React.FC = () => {
             tipo: lancamentoData.tipo,
             contrato_id: lancamentoData.contrato_id ? lancamentoData.contrato_id.toString() : '',
             fornecedor_id: lancamentoData.fornecedor_id ? lancamentoData.fornecedor_id.toString() : '',
+            natureza_id: lancamentoData.natureza_id ? lancamentoData.natureza_id.toString() : '',
             data_vencimento: dataVencimento,
             data_pagamento: dataPagamento,
             valor: lancamentoData.valor.toString(),
             status: lancamentoData.status,
+            forma_pagamento: lancamentoData.forma_pagamento || '',
             numero_nota_fiscal: lancamentoData.numero_nota_fiscal || '',
             observacoes: lancamentoData.observacoes || ''
           });
@@ -106,11 +113,16 @@ const LancamentoForm: React.FC = () => {
       if (formData.status === 'pago' && !formData.data_pagamento) {
         throw new Error('Lançamentos pagos devem ter data de pagamento');
       }
+
+      if (!formData.natureza_id) {
+        throw new Error('Natureza é obrigatória');
+      }
       
       const dataToSubmit = {
         ...formData,
         contrato_id: formData.contrato_id ? Number(formData.contrato_id) : null,
         fornecedor_id: formData.fornecedor_id ? Number(formData.fornecedor_id) : null,
+        natureza_id: formData.natureza_id ? Number(formData.natureza_id) : null,
         valor: Number(formData.valor)
       };
       
@@ -191,7 +203,7 @@ const LancamentoForm: React.FC = () => {
                     <option value="">Selecione um contrato</option>
                     {contratos.map(contrato => (
                       <option key={contrato.id} value={contrato.id}>
-                        {contrato.identificador_contrato} - {contrato.procedimento}
+                        {contrato.identificador_contrato} - {contrato.paciente} - {contrato.procedimento_nome}
                       </option>
                     ))}
                   </select>
@@ -284,6 +296,47 @@ const LancamentoForm: React.FC = () => {
                   onChange={handleChange}
                   className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="forma_pagamento" className="block text-sm font-medium text-gray-700">
+                  Forma de pagamento
+                </label>
+                <select
+                  id="forma_pagamento"
+                  name="forma_pagamento"
+                  value={formData.forma_pagamento}
+                  onChange={handleChange}
+                  className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  <option value="" disabled>Selecione uma opção</option>
+                  <option value="boleto">Boleto</option>
+                  <option value="cartao-credito">Cartão de crédito</option>
+                  <option value="cartao-debito">Cartão de débito</option>
+                  <option value="dinheiro">Dinheiro</option>
+                  <option value="pix">Pix</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="natureza_id" className="block text-sm font-medium text-gray-700">
+                  Natureza *
+                </label>
+                <select
+                  id="natureza_id"
+                  name="natureza_id"
+                  required
+                  value={formData.natureza_id}
+                  onChange={handleChange}
+                  className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  <option value="">Selecione uma natureza</option>
+                  {naturezas.map(n => (
+                    <option key={n.id} value={n.id}>
+                      {n.nome}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               {formData.tipo === 'a_pagar' && (

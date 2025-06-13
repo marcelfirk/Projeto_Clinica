@@ -69,9 +69,9 @@ const Lancamentos: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
-  };
+    const [year, month, day] = dateString.split('T')[0].split('-');
+  return `${day}/${month}/${year}`;
+};
 
   const filteredLancamentos = lancamentos.filter(lancamento => {
     // Filtro por tipo

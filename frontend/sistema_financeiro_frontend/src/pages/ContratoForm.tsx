@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { contratoService, pacienteService } from '../services/api';
+import { contratoService, pacienteService, agendamentoService } from '../services/api';
+import Select from 'react-select';
 
 const ContratoForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,14 +11,14 @@ const ContratoForm: React.FC = () => {
   
   const [formData, setFormData] = useState({
     paciente_id: '',
-    procedimento: '',
-    data_procedimento: '',
-    local_realizacao: '',
-    valor_total: '',
+    agendamento_id: '',
+    valor_sinal: '',
+    valor_restante: 0,
     status: 'ativo'
   });
   
   const [pacientes, setPacientes] = useState<any[]>([]);
+  const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -27,23 +28,24 @@ const ContratoForm: React.FC = () => {
       try {
         setLoading(true);
         
-        // Busca lista de pacientes
-        const pacientesData = await pacienteService.getAll();
+        // Busca lista de pacientes e agendamentos
+        const [pacientesData, agendamentosData] = await Promise.all([
+          pacienteService.getAll(),
+          agendamentoService.getAll()
+        ]);
+        
         setPacientes(pacientesData);
+        setAgendamentos(agendamentosData);
         
         // Se estiver editando, busca dados do contrato
         if (isEditing) {
           const contratoData = await contratoService.getById(Number(id));
           
-          // Formata a data para o formato esperado pelo input type="date"
-          const dataProcedimento = contratoData.data_procedimento ? contratoData.data_procedimento.split('T')[0] : '';
-          
           setFormData({
             paciente_id: contratoData.paciente_id.toString(),
-            procedimento: contratoData.procedimento,
-            data_procedimento: dataProcedimento,
-            local_realizacao: contratoData.local_realizacao,
-            valor_total: contratoData.valor_total.toString(),
+            agendamento_id: contratoData.agendamento_id?.toString() || '',
+            valor_sinal: contratoData.valor_sinal?.toString() || '',
+            valor_restante: contratoData.valor_restante?.toString() ?? '',
             status: contratoData.status
           });
         }
@@ -58,8 +60,12 @@ const ContratoForm: React.FC = () => {
     fetchData();
   }, [id, isEditing]);
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
@@ -72,7 +78,9 @@ const ContratoForm: React.FC = () => {
       const dataToSubmit = {
         ...formData,
         paciente_id: Number(formData.paciente_id),
-        valor_total: Number(formData.valor_total)
+        agendamento_id: formData.agendamento_id ? Number(formData.agendamento_id) : null,
+        valor_sinal: Number(formData.valor_sinal),
+        valor_restante: Number(formData.valor_restante)
       };
       
       if (isEditing) {
@@ -123,80 +131,84 @@ const ContratoForm: React.FC = () => {
                 <label htmlFor="paciente_id" className="block text-sm font-medium text-gray-700">
                   Paciente *
                 </label>
-                <select
+                <Select
                   id="paciente_id"
                   name="paciente_id"
+                  options={pacientes.map(p => ({
+                    value: p.id,
+                    label: `${p.nome} - ${p.cpf}`
+                  }))}
+                  value={pacientes
+                    .map(p => ({ value: p.id, label: `${p.nome} - ${p.cpf}` }))
+                    .find(opt => opt.value === Number(formData.paciente_id))}
+                  onChange={(selectedOption) =>
+                    handleSelectChange('paciente_id', selectedOption?.value.toString() || '')
+                  }
+                  className="mt-1"
+                  placeholder="Selecione o paciente..."
+                  isClearable
                   required
-                  value={formData.paciente_id}
-                  onChange={handleChange}
-                  className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                >
-                  <option value="">Selecione um paciente</option>
-                  {pacientes.map(paciente => (
-                    <option key={paciente.id} value={paciente.id}>
-                      {paciente.nome} - {paciente.cpf}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="procedimento" className="block text-sm font-medium text-gray-700">
-                  Procedimento *
-                </label>
-                <input
-                  type="text"
-                  name="procedimento"
-                  id="procedimento"
-                  required
-                  value={formData.procedimento}
-                  onChange={handleChange}
-                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
               
               <div>
-                <label htmlFor="data_procedimento" className="block text-sm font-medium text-gray-700">
-                  Data do Procedimento *
+                <label htmlFor="agendamento_id" className="block text-sm font-medium text-gray-700">
+                  Agendamento
                 </label>
-                <input
-                  type="date"
-                  name="data_procedimento"
-                  id="data_procedimento"
-                  required
-                  value={formData.data_procedimento}
-                  onChange={handleChange}
-                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                <Select
+                  id="agendamento_id"
+                  name="agendamento_id"
+                  options={agendamentos
+                    .filter(a => a.paciente_id === Number(formData.paciente_id) || !formData.paciente_id)
+                    .map(a => ({
+                      value: a.id,
+                      label: `#${a.id} - ${new Date(a.data_agendamento).toLocaleDateString()} - ${a.procedimento_nome || 'Procedimento'}`
+                    }))}
+                  value={agendamentos
+                    .map(a => ({
+                      value: a.id,
+                      label: `#${a.id} - ${new Date(a.data_agendamento).toLocaleDateString()} - ${a.procedimento_nome || 'Procedimento'}`
+                    }))
+                    .find(opt => opt.value === Number(formData.agendamento_id))}
+                  onChange={(selectedOption) =>
+                    handleSelectChange('agendamento_id', selectedOption?.value.toString() || '')
+                  }
+                  className="mt-1"
+                  placeholder="Selecione o agendamento..."
+                  isClearable
+                  isDisabled={!formData.paciente_id}
                 />
               </div>
               
               <div>
-                <label htmlFor="local_realizacao" className="block text-sm font-medium text-gray-700">
-                  Local de Realização *
-                </label>
-                <input
-                  type="text"
-                  name="local_realizacao"
-                  id="local_realizacao"
-                  required
-                  value={formData.local_realizacao}
-                  onChange={handleChange}
-                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="valor_total" className="block text-sm font-medium text-gray-700">
-                  Valor Total (R$) *
+                <label htmlFor="valor_sinal" className="block text-sm font-medium text-gray-700">
+                  Valor do Sinal (R$) *
                 </label>
                 <input
                   type="number"
-                  name="valor_total"
-                  id="valor_total"
+                  name="valor_sinal"
+                  id="valor_sinal"
                   required
                   step="0.01"
                   min="0"
-                  value={formData.valor_total}
+                  value={formData.valor_sinal}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="valor_restante" className="block text-sm font-medium text-gray-700">
+                  Valor Restante (R$) *
+                </label>
+                <input
+                  type="number"
+                  name="valor_restante"
+                  id="valor_restante"
+                  required
+                  step="0.01"
+                  min="0"
+                  value={formData.valor_restante}
                   onChange={handleChange}
                   className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                 />

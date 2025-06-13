@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import uuid
-
 db = SQLAlchemy()
 
 class Paciente(db.Model):
@@ -18,7 +17,7 @@ class Paciente(db.Model):
     data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
     nacionalidade = db.Column(db.String(25), nullable=True)
     
-    contratos = db.relationship('Contrato', backref='paciente', lazy=True)
+    contratos = db.relationship('Contrato', back_populates='paciente')
     
     def __repr__(self):
         return f'<Paciente {self.nome}>'

@@ -8,14 +8,33 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_migrate import Migrate
 
-from src.routes.auth import auth_bp
 from src.routes.pacientes import pacientes_bp
+from src.routes.auth import auth_bp
 from src.routes.contratos import contratos_bp
 from src.routes.fornecedores import fornecedores_bp
 from src.routes.lancamentos import lancamentos_bp
 from src.routes.bi import bi_bp
-from src.models.contrato import db
+from src.routes.itens import itens_bp
+from src.routes.locais_atendimento import locais_atendimento_bp
+from src.routes.procedimentos import procedimentos_bp
+from src.routes.equipes import equipes_bp
+from src.routes.categorias_procedimento import categorias_procedimento_bp
+from src.routes.refeicoes import refeicoes_bp
+from src.routes.agendamentos import agendamentos_bp
+from src.routes.naturezas_orcamentarias import naturezas_bp
+from src.routes.entradas_estoque import entradas_estoque_bp
+from src.routes.saidas_estoque import saidas_estoque_bp
+from src.routes.estoque import estoque_bp
 
+from src.models.contrato import db
+from src.models.itens import Item
+from src.models.local_atendimento import LocalAtendimento
+from src.models.procedimento import Procedimento
+from src.models.equipe import Equipe
+from src.models.categoria_procedimento import CategoriaProcedimento
+from src.models.refeicao import Refeicao
+from src.models.agendamento import Agendamento
+from src.models.natureza_orcamentaria import Natureza
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
@@ -56,6 +75,18 @@ app.register_blueprint(contratos_bp, url_prefix='/api/contratos')
 app.register_blueprint(fornecedores_bp, url_prefix='/api/fornecedores')
 app.register_blueprint(lancamentos_bp, url_prefix='/api/lancamentos')
 app.register_blueprint(bi_bp, url_prefix='/api/bi')
+app.register_blueprint(itens_bp, url_prefix='/api/itens')
+app.register_blueprint(locais_atendimento_bp, url_prefix='/api/locais_atendimento')
+app.register_blueprint(procedimentos_bp, url_prefix='/api/procedimentos')
+app.register_blueprint(equipes_bp, url_prefix='/api/equipes')
+app.register_blueprint(categorias_procedimento_bp, url_prefix='/api/categorias_procedimento')
+app.register_blueprint(refeicoes_bp, url_prefix='/api/refeicoes')
+app.register_blueprint(agendamentos_bp, url_prefix='/api/agendamentos')
+app.register_blueprint(naturezas_bp, url_prefix='/api/naturezas')
+app.register_blueprint(entradas_estoque_bp, url_prefix='/api/entradas_estoque')
+app.register_blueprint(saidas_estoque_bp, url_prefix='/api/saidas_estoque')
+app.register_blueprint(estoque_bp, url_prefix='/api/estoque_atual')
+
 
 # Configuração do banco de dados
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://inmecap:1nm3c%40p@localhost:3306/sistema_financeiro"

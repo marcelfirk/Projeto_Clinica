@@ -40,9 +40,11 @@ const SaidasEstoque: React.FC = () => {
     String(s.agendamento_id).includes(searchTerm)
   );
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR');
-  };
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('T')[0].split('-');
+  return `${day}/${month}/${year}`;
+};
 
   return (
     <Layout>
@@ -76,7 +78,7 @@ const SaidasEstoque: React.FC = () => {
                 <li key={saida.id} className="p-4">
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                        Agendamento: {saida.agendamento_id || 'Não informado'}
+                        Procedimento: {saida.agendamento_dados || 'Não informado'}
                     </p>
                     <p className="text-sm text-gray-500">Data: {formatDate(saida.data_saida)}</p>
                     <p className="text-sm text-gray-500">Itens: {saida.itens.length}</p>

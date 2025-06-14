@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { lancamentoService, contratoService, fornecedorService, naturezaService } from '../services/api';
 
 const LancamentoForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEditing = !!id;
   
   const [formData, setFormData] = useState({
@@ -66,6 +67,24 @@ const LancamentoForm: React.FC = () => {
             numero_nota_fiscal: lancamentoData.numero_nota_fiscal || '',
             observacoes: lancamentoData.observacoes || ''
           });
+        } else {
+          // Se não estiver editando, verifica se há parâmetros da URL (vindo da entrada de estoque)
+          const tipoParam = searchParams.get('tipo');
+          const fornecedorIdParam = searchParams.get('fornecedor_id');
+          const valorParam = searchParams.get('valor');
+          const dataVencimentoParam = searchParams.get('data_vencimento');
+          const observacoesParam = searchParams.get('observacoes');
+          
+          if (tipoParam || fornecedorIdParam || valorParam) {
+            setFormData(prev => ({
+              ...prev,
+              tipo: tipoParam || prev.tipo,
+              fornecedor_id: fornecedorIdParam || prev.fornecedor_id,
+              valor: valorParam || prev.valor,
+              data_vencimento: dataVencimentoParam || prev.data_vencimento,
+              observacoes: observacoesParam || prev.observacoes
+            }));
+          }
         }
       } catch (err: any) {
         setError('Erro ao carregar dados. Por favor, tente novamente.');
@@ -76,7 +95,7 @@ const LancamentoForm: React.FC = () => {
     };
     
     fetchData();
-  }, [id, isEditing]);
+  }, [id, isEditing, searchParams]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -152,6 +171,9 @@ const LancamentoForm: React.FC = () => {
     );
   }
   
+  // Verifica se veio da entrada de estoque
+  const veioDaEntradaEstoque = searchParams.get('fornecedor_id') && searchParams.get('valor');
+  
   return (
     <Layout>
       <div className="py-6">
@@ -160,6 +182,13 @@ const LancamentoForm: React.FC = () => {
             {isEditing ? 'Editar Lançamento' : 'Novo Lançamento'}
           </h1>
         </div>
+        
+        {veioDaEntradaEstoque && !isEditing && (
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+            <p className="font-medium">Lançamento baseado na entrada de estoque</p>
+            <p className="text-sm">Os campos foram pré-preenchidos com base na entrada de estoque recém-criada. Você pode ajustar os valores conforme necessário.</p>
+          </div>
+        )}
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -394,3 +423,4 @@ const LancamentoForm: React.FC = () => {
 };
 
 export default LancamentoForm;
+

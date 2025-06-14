@@ -48,16 +48,25 @@ const Agendamentos: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Estados para paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20); // Limite de 20 itens por página
+  const [totalAgendamentos, setTotalAgendamentos] = useState(0);
+
   useEffect(() => {
     fetchAgendamentos();
-  }, []);
+  }, [currentPage]); // Adiciona currentPage como dependência
 
   const fetchAgendamentos = async () => {
     try {
-      const response = await agendamentoService.getAll();
+      setLoading(true);
+      const response = await agendamentoService.getAll(); // Supondo que getAll() retorna todos os agendamentos
+      setTotalAgendamentos(response.length);
       setAgendamentos(response);
     } catch (error) {
       console.error('Erro ao buscar agendamentos:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,8 +104,7 @@ const Agendamentos: React.FC = () => {
       await agendamentoService.registrarServico(selectedAgendamento, selectedServico);
       
       // Atualiza a lista de agendamentos
-      const updatedAgendamentos = await agendamentoService.getAll();
-      setAgendamentos(updatedAgendamentos);
+      fetchAgendamentos();
       
       setShowModal(false);
     } catch (err: any) {
@@ -107,6 +115,12 @@ const Agendamentos: React.FC = () => {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('T')[0].split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const servicosOptions = [
     { value: 'exames', label: 'Exames' },
     { value: 'termo_marcacao', label: 'Termo de Marcação' },
@@ -115,6 +129,15 @@ const Agendamentos: React.FC = () => {
     { value: 'comunicacao_d2', label: 'Comunicação D-2' },
     { value: 'comunicacao_d1', label: 'Comunicação D+1' }
   ];
+
+  // Lógica de paginação
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentAgendamentos = agendamentos.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(totalAgendamentos / itemsPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <Layout>
@@ -206,11 +229,11 @@ const Agendamentos: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {agendamentos.map((agendamento) => (
+            {currentAgendamentos.map((agendamento) => (
               <tr key={agendamento.id}>
                 <td className="px-6 py-4 whitespace-nowrap">{agendamento.id}</td> 
                 <td className="px-6 py-4 whitespace-nowrap">{agendamento.paciente_nome}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{agendamento.data_agendamento}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{formatDate(agendamento.data_agendamento)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{agendamento.procedimento_nome}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{agendamento.grau_calvicie}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{agendamento.equipe_nome}</td>
@@ -250,6 +273,33 @@ const Agendamentos: React.FC = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Controles de Paginação */}
+      <div className="flex justify-center mt-4 space-x-2">
+        <button
+          onClick={() => paginate(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l"
+        >
+          Anterior
+        </button>
+        {[...Array(totalPages)].map((_, index) => (
+          <button
+            key={index}
+            onClick={() => paginate(index + 1)}
+            className={`py-2 px-4 font-bold rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-800 hover:bg-gray-400'}`}
+          >
+            {index + 1}
+          </button>
+        ))}
+        <button
+          onClick={() => paginate(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r"
+        >
+          Próxima
+        </button>
       </div>
     </Layout>
   );

@@ -19,6 +19,7 @@ def listar_saidas_estoque():
         resultado.append({
             "id": saida.id,
             "agendamento_id": saida.agendamento_id,
+            "agendamento_dados": saida.agendamento.procedimento.nome + ' - ' + saida.agendamento.paciente.nome ,
             "data_saida": saida.data_saida.isoformat(),
             "observacoes": saida.observacoes,
             "itens": [

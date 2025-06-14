@@ -29,8 +29,10 @@ const EntradasEstoque: React.FC = () => {
     entrada.fornecedor?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR');
+    const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('T')[0].split('-');
+  return `${day}/${month}/${year}`; 
   };
 
   const handleDelete = async (id: number) => {

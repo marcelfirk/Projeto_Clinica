@@ -21,6 +21,8 @@ def listar_lancamentos():
             "tipo": lancamento.tipo,
             "contrato_id": lancamento.contrato_id,
             "contrato_identificador": lancamento.contrato.identificador_contrato if lancamento.contrato else None,
+            "paciente_nome": lancamento.contrato.paciente.nome if lancamento.contrato else (
+      lancamento.pacote_tratamento.paciente.nome if lancamento.pacote_tratamento else None),
             "fornecedor_id": lancamento.fornecedor_id,
             "fornecedor_nome": lancamento.fornecedor.nome if lancamento.fornecedor else None,
             "data_vencimento": lancamento.data_vencimento.isoformat() if lancamento.data_vencimento else None,
@@ -33,7 +35,8 @@ def listar_lancamentos():
             "natureza_id": lancamento.natureza_id,
             "natureza_nome": lancamento.natureza.nome if lancamento.natureza else None,
             "data_criacao": lancamento.data_criacao.isoformat(),
-            "data_atualizacao": lancamento.data_atualizacao.isoformat()
+            "data_atualizacao": lancamento.data_atualizacao.isoformat(),
+            "pacote_tratamento_id": lancamento.pacote_tratamento_id
         })
     
     return jsonify(resultado), 200
@@ -52,6 +55,8 @@ def obter_lancamento(id):
         "tipo": lancamento.tipo,
         "contrato_id": lancamento.contrato_id,
         "contrato_identificador": lancamento.contrato.identificador_contrato if lancamento.contrato else None,
+        "paciente_nome": lancamento.contrato.paciente.nome if lancamento.contrato else (
+      lancamento.pacote_tratamento.paciente.nome if lancamento.pacote_tratamento else None),
         "fornecedor_id": lancamento.fornecedor_id,
         "fornecedor_nome": lancamento.fornecedor.nome if lancamento.fornecedor else None,
         "data_vencimento": lancamento.data_vencimento.isoformat() if lancamento.data_vencimento else None,
@@ -64,12 +69,15 @@ def obter_lancamento(id):
         "natureza_id": lancamento.natureza_id,
         "natureza_nome": lancamento.natureza.nome if lancamento.natureza else None,
         "data_criacao": lancamento.data_criacao.isoformat(),
-        "data_atualizacao": lancamento.data_atualizacao.isoformat()
+        "data_atualizacao": lancamento.data_atualizacao.isoformat(),
+        "pacote_tratamento_id": lancamento.pacote_tratamento_id
     }), 200
 
 @lancamentos_bp.route('/', methods=['POST'])
 @jwt_required()
 def criar_lancamento():
+    print(request.json)
+
     """Endpoint para criar um novo lançamento financeiro"""
     if not request.is_json:
         return jsonify({"msg": "Requisição deve ser JSON"}), 400
@@ -82,16 +90,24 @@ def criar_lancamento():
     if not tipo or not data_vencimento or valor is None:
         return jsonify({"msg": "Tipo, data de vencimento e valor são obrigatórios"}), 400
     
-    # Validações específicas por tipo
+# Validação para lançamentos a receber
     if tipo == 'a_receber':
-        contrato_id = request.json.get('contrato_id', None)
-        if not contrato_id:
-            return jsonify({"msg": "Lançamentos a receber devem estar vinculados a um contrato"}), 400
-        
-        # Verifica se contrato existe
-        contrato = Contrato.query.get(contrato_id)
-        if not contrato:
-            return jsonify({"msg": "Contrato não encontrado"}), 404
+        contrato_id = request.json.get('contrato_id')
+        pacote_tratamento_id = request.json.get('pacote_tratamento_id')
+
+        # Regra 1: Deve ter contrato_id ou pacote_tratamento_id, mas não ambos vazios
+        if not contrato_id and not pacote_tratamento_id:
+            return jsonify({"msg": "Lançamentos a receber devem estar vinculados a um contrato ou a um pacote de tratamento"}), 400
+
+        # Regra 2: Não pode ter ambos preenchidos
+        if contrato_id and pacote_tratamento_id:
+            return jsonify({"msg": "Lançamento não pode estar vinculado simultaneamente a contrato e a pacote de tratamento"}), 400
+
+        # Verifica se contrato existe, se informado
+        if contrato_id:
+            contrato = Contrato.query.get(contrato_id)
+            if not contrato:
+                return jsonify({"msg": "Contrato não encontrado"}), 404
     
     elif tipo == 'a_pagar':
         fornecedor_id = request.json.get('fornecedor_id', None)
@@ -145,7 +161,8 @@ def criar_lancamento():
         forma_pagamento=request.json.get('forma_pagamento'),
         numero_nota_fiscal=request.json.get('numero_nota_fiscal'),
         observacoes=request.json.get('observacoes'),
-        natureza_id=natureza_id
+        natureza_id=natureza_id,
+        pacote_tratamento_id=request.json.get('pacote_tratamento_id')
     )
     
     # Valida regras de negócio

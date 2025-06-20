@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { lancamentoService, contratoService, fornecedorService } from '../services/api';
+import { lancamentoService, contratoService, fornecedorService, boletoService } from '../services/api';
 
 const Lancamentos: React.FC = () => {
   const navigate = useNavigate();
@@ -13,20 +13,27 @@ const Lancamentos: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [filtroStatus, setFiltroStatus] = useState('todos');
+  const [showModal, setShowModal] = useState(false);
+  const [servico, setServico] = useState('');
+  const [descricaoServico, setDescricaoServico] = useState('');
+  const [lancamentoSelecionado, setLancamentoSelecionado] = useState<any>(null);
+  const [boletos, setBoletos] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [lancamentosData, contratosData, fornecedoresData] = await Promise.all([
+        const [lancamentosData, contratosData, fornecedoresData, boletosData] = await Promise.all([
           lancamentoService.getAll(),
           contratoService.getAll(),
-          fornecedorService.getAll()
+          fornecedorService.getAll(),
+          boletoService.getAll()
         ]);
         
         setLancamentos(lancamentosData);
         setContratos(contratosData);
         setFornecedores(fornecedoresData);
+        setBoletos(boletosData);
       } catch (err: any) {
         setError('Erro ao carregar lançamentos. Por favor, tente novamente.');
         console.error('Erro ao carregar lançamentos:', err);
@@ -37,6 +44,37 @@ const Lancamentos: React.FC = () => {
 
     fetchData();
   }, []);
+
+    const getPacienteNome = (lancamento: any) => {
+    if (lancamento.paciente_nome) {
+      return lancamento.paciente_nome;
+    }
+    
+    const contrato = contratos.find(c => c.id === lancamento.contrato_id);
+    if (contrato && contrato.paciente) {
+      return contrato.paciente;
+    }
+
+    return 'N/A';
+  };
+
+  const openModal = (lancamento: any) => {
+    setLancamentoSelecionado(lancamento);
+    setShowModal(true);
+  };
+
+  const handleExibirBoleto = (lancamentoId: number) => {
+    const boleto = getBoletoByLancamento(lancamentoId);
+    if (boleto && boleto.link_pdf) {
+      window.open(boleto.link_pdf, '_blank');
+    } else {
+      alert('Boleto não encontrado.');
+    }
+  };
+
+  const getBoletoByLancamento = (lancamentoId: number) => {
+    return boletos.find(b => b.lancamento_id === lancamentoId);
+  };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir este lançamento?')) {
@@ -52,7 +90,7 @@ const Lancamentos: React.FC = () => {
 
   const getContratoIdentificador = (contratoId: number) => {
     const contrato = contratos.find(c => c.id === contratoId);
-    return contrato ? contrato.identificador_contrato : 'N/A';
+    return contrato ? contrato.paciente_nome : 'N/A';
   };
 
   const getFornecedorNome = (fornecedorId: number) => {
@@ -73,6 +111,29 @@ const Lancamentos: React.FC = () => {
   return `${day}/${month}/${year}`;
 };
 
+  const handleEmitirBoleto = async () => {
+    if (!servico || !descricaoServico) {
+      alert('Preencha todos os campos!');
+      return;
+    }
+
+    try {
+      await boletoService.emitir({
+        lancamento_id: lancamentoSelecionado.id,
+        servico: servico,
+        descricao_servico: descricaoServico},
+      );
+      alert('Boleto emitido com sucesso!');
+      setShowModal(false);
+      setServico('');
+      setDescricaoServico('');
+    } catch (error) {
+      console.error('Erro ao emitir boleto:', error);
+      alert('Erro ao emitir boleto.');
+    }
+  };
+
+
   const filteredLancamentos = lancamentos.filter(lancamento => {
     // Filtro por tipo
     if (filtroTipo !== 'todos' && lancamento.tipo !== filtroTipo) {
@@ -88,8 +149,8 @@ const Lancamentos: React.FC = () => {
     const searchTermLower = searchTerm.toLowerCase();
     
     // Busca em contrato
-    const contratoMatch = lancamento.contrato_id && 
-      getContratoIdentificador(lancamento.contrato_id).toLowerCase().includes(searchTermLower);
+    const pacienteMatch = lancamento.paciente_nome && 
+      lancamento.paciente_nome.toLowerCase().includes(searchTermLower);
     
     // Busca em fornecedor
     const fornecedorMatch = lancamento.fornecedor_id && 
@@ -99,9 +160,9 @@ const Lancamentos: React.FC = () => {
     const notaFiscalMatch = lancamento.numero_nota_fiscal && 
       lancamento.numero_nota_fiscal.toLowerCase().includes(searchTermLower);
     
-    return contratoMatch || fornecedorMatch || notaFiscalMatch || 
-      (searchTerm === '' || searchTermLower === '');
-  });
+    return pacienteMatch || fornecedorMatch || notaFiscalMatch || 
+    (searchTerm === '' || searchTermLower === '');
+    });
 
   const totalAReceber = filteredLancamentos
     .filter(l => l.tipo === 'a_receber' && l.status === 'pendente')
@@ -113,6 +174,55 @@ const Lancamentos: React.FC = () => {
 
   return (
     <Layout>
+    {showModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold mb-4">Emitir Boleto</h2>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nome do Serviço
+            </label>
+            <input
+              type="text"
+              value={servico}
+              onChange={(e) => setServico(e.target.value)}
+              className="border rounded w-full py-2 px-3"
+              placeholder="Ex: Cirurgia plástica"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descrição do Serviço
+            </label>
+            <input
+              type="text"
+              value={descricaoServico}
+              onChange={(e) => setDescricaoServico(e.target.value)}
+              className="border rounded w-full py-2 px-3"
+              placeholder="Ex: Cirurgia de pálpebra superior"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <button
+              onClick={() => setShowModal(false)}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleEmitirBoleto}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+      )}
+
       <div className="py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Lançamentos Financeiros</h1>
@@ -138,7 +248,7 @@ const Lancamentos: React.FC = () => {
               </label>
               <input
                 type="text"
-                placeholder="Buscar por contrato, fornecedor ou nota fiscal..."
+                placeholder="Buscar por paciente, fornecedor ou nota fiscal..."
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -220,13 +330,13 @@ const Lancamentos: React.FC = () => {
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
                           {lancamento.tipo === 'a_receber' 
-                            ? `Contrato: ${getContratoIdentificador(lancamento.contrato_id)}`
+                            ? `Paciente: ${getPacienteNome(lancamento)}`
                             : `Fornecedor: ${getFornecedorNome(lancamento.fornecedor_id)}`
                           }
                           {lancamento.numero_nota_fiscal && ` | NF: ${lancamento.numero_nota_fiscal}`}
                         </p>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => navigate(`/lancamentos/${lancamento.id}`)}
                           className="bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold py-1 px-3 rounded text-sm"
@@ -238,7 +348,24 @@ const Lancamentos: React.FC = () => {
                           className="bg-red-100 hover:bg-red-200 text-red-700 font-bold py-1 px-3 rounded text-sm"
                         >
                           Excluir
-                        </button>
+                        </button>                
+                        {lancamento.tipo === 'a_receber' && lancamento.status === 'pendente' && (
+                          getBoletoByLancamento(lancamento.id) ? (
+                            <button
+                              onClick={() => handleExibirBoleto(lancamento.id)}
+                              className="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold py-1 px-3 rounded text-sm"
+                            >
+                              Exibir Boleto
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openModal(lancamento)}
+                              className="bg-green-100 hover:bg-green-200 text-green-700 font-bold py-1 px-3 rounded text-sm"
+                            >
+                              Emitir Boleto
+                            </button>
+                          )
+                        )}
                       </div>
                     </div>
                     <div className="mt-2 sm:flex sm:justify-between">

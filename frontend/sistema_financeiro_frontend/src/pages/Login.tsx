@@ -74,22 +74,6 @@ const Login: React.FC = () => {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </div>
-          
-          <div className="text-center mt-4">
-            <p className="text-sm">
-              Não tem uma conta?{' '}
-              <a 
-                href="/register" 
-                className="text-blue-500 hover:text-blue-700"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/register');
-                }}
-              >
-                Registre-se
-              </a>
-            </p>
-          </div>
         </form>
       </div>
     </div>

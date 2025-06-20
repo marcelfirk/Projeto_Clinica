@@ -1,178 +1,164 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
+import { Home } from 'lucide-react';
+
+type MenuKey = 'cadastros' | 'estoque' | 'tratamentos' | 'agenda' | 'financeiro';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-  const [isCadastrosOpen, setIsCadastrosOpen] = useState(false);
+  const [menus, setMenus] = useState<Record<MenuKey, boolean>>({
+    cadastros: false,
+    estoque: false,
+    tratamentos: false,
+    agenda: false,
+    financeiro: false
+  });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isEstoqueOpen, setIsEstoqueOpen] = useState(false);
-  
+
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
+    if (currentUser) setUser(currentUser);
   }, []);
-  
+
+  const toggleMenu = (menu: MenuKey) => {
+    setMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
+  };
+
   const handleLogout = () => {
     authService.logout();
     navigate('/login');
   };
 
-  const toggleCadastros = () => {
-    setIsCadastrosOpen(!isCadastrosOpen);
-  };
+  const simpleLinks = [
+    { path: '/calendario', label: 'Calendário' },
+    { path: '/agendamentos', label: 'Agendamentos'}
+  ];
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-  
+  const menuGroups = [
+    {
+      label: 'Financeiro',
+      key: 'financeiro' as MenuKey,
+      items: [
+        { path: '/lancamentos', label: 'Lançamentos' },
+        { path: '/contratos', label: 'Contratos' }
+      ]
+    },
+    {
+      label: 'Estoque',
+      key: 'estoque' as MenuKey,
+      items: [
+        { path: '/entradas-estoque', label: 'Entradas' },
+        { path: '/saidas-estoque', label: 'Saídas' },
+        { path: '/estoque-atual', label: 'Estoque Atual' }
+      ]
+    },
+    {
+      label: 'Tratamentos',
+      key: 'tratamentos' as MenuKey,
+      items: [
+        { path: '/pacotes-tratamento', label: 'Pacotes' },
+        { path: '/pacotes-tratamento/pendentes', label: 'Sessões Pendentes' }
+      ]
+    },
+    {
+      label: 'Cadastros',
+      key: 'cadastros' as MenuKey,
+      items: [
+        { path: '/pacientes', label: 'Pacientes' },
+        { path: '/itens', label: 'Itens' },
+        { path: '/locais-atendimento', label: 'Locais de Atendimento' },
+        { path: '/procedimentos', label: 'Procedimentos' },
+        { path: '/equipes', label: 'Equipes' },
+        { path: '/categorias-procedimento', label: 'Categorias de Procedimento' },
+        { path: '/refeicoes', label: 'Refeições' },
+        { path: '/fornecedores', label: 'Fornecedores' },
+        { path: '/naturezas', label: 'Naturezas' },
+        { path: '/tipo-tratamento', label: 'Tipos de Tratamento' },
+        { path: '/usuarios', label: 'Usuários' }
+      ]
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Barra de navegação superior - agora com largura total */}
       <nav className="bg-[#07233B] shadow-sm w-full">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 2xl:px-16"> {/* Ajuste de padding para telas grandes */}
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              {/* Logo e título - ajuste para telas grandes */}
               <div className="flex-shrink-0 flex items-center">
-                <img
-                  src="/logo.png"
-                  alt="Logo"
-                  className="h-10 w-auto"
-                />
-                <h1 className="text-white text-xl font-bold ml-2 hidden sm:block">INMECAP - Sistema de Gestão</h1>
+                <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+                <h1 className="text-white text-xl font-bold ml-2 hidden sm:block">
+                  INMECAP
+                </h1>
               </div>
 
-              {/* Menu desktop - ajustado para usar melhor o espaço */}
-              <div className="hidden md:ml-6 md:flex md:space-x-2 lg:space-x-4">
-                {[
-                  { path: '/', label: 'Dashboard' },
-                  { path: '/agendamentos', label: 'Agendamentos' },
-                  { path: '/contratos', label: 'Contratos' },
-                  { path: '/lancamentos', label: 'Lançamentos' },
-                  { path: '/calendario', label: 'Calendário' },
-                ].map((item) => (
-                  <a 
+              <div className="hidden md:flex md:space-x-4 ml-6">
+                <button
+                  onClick={() => navigate('/')}
+                  className="text-white hover:bg-gray-700 px-3 py-2 rounded-md"
+                >
+                  <Home size={18} />
+                </button>
+
+                {simpleLinks.map(item => (
+                  <button
                     key={item.path}
-                    href={item.path}
-                    onClick={(e) => { e.preventDefault(); navigate(item.path); }}
-                    className="text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                    onClick={() => navigate(item.path)}
+                    className="text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     {item.label}
-                  </a>
+                  </button>
                 ))}
-                {/* Dropdown de Estoque */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsEstoqueOpen((prev) => !prev)}
-                    className="text-white hover:bg-gray-700 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium focus:outline-none"
-                  >
-                    Estoque
-                    <svg
-                      className="ml-1 h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+
+                {menuGroups.map(group => (
+                  <div className="relative" key={group.key}>
+                    <button
+                      onClick={() => toggleMenu(group.key)}
+                      className="text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                  {isEstoqueOpen && (
-                    <div className="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
-                      {[
-                        { path: '/entradas-estoque', label: 'Entrada de Estoque' },
-                        { path: '/saidas-estoque', label: 'Saída de Estoque' },
-                        { path: '/estoque-atual', label: 'Estoque Atual' }
-                      ].map((item) => (
-                        <a
-                          key={item.path}
-                          href={item.path}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigate(item.path);
-                            setIsEstoqueOpen(false);
-                          }}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          {item.label}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {/* Dropdown de Cadastros - mais compacto */}
-                <div className="relative">
-                  <button
-                    onClick={toggleCadastros}
-                    className="text-white hover:bg-gray-700 hover:text-white inline-flex items-center px-3 py-2 rounded-md text-sm font-medium focus:outline-none"
-                  >
-                    Cadastros
-                    <svg
-                      className="ml-1 h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                  {isCadastrosOpen && (
-                    <div className="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                      {[
-                        { path: '/pacientes', label: 'Pacientes' },
-                        { path: '/itens', label: 'Itens' },
-                        { path: '/locais-atendimento', label: 'Locais de Atendimento' },
-                        { path: '/procedimentos', label: 'Procedimentos' },
-                        { path: '/equipes', label: 'Equipes' },
-                        { path: '/categorias-procedimento', label: 'Categorias de Procedimento' },
-                        { path: '/refeicoes', label: 'Refeições' },
-                        { path: '/fornecedores', label: 'Fornecedores' },
-                        { path: '/naturezas', label: 'Naturezas' }
-                      ].map((item) => (
-                        <a
-                          key={item.path}
-                          href={item.path}
-                          onClick={(e) => { e.preventDefault(); navigate(item.path); setIsCadastrosOpen(false); }}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          {item.label}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      {group.label}
+                    </button>
+                    {menus[group.key] && (
+                      <div className="absolute mt-2 w-56 bg-white rounded-md shadow-lg z-50">
+                        {group.items.map(item => (
+                          <button
+                            key={item.path}
+                            onClick={() => {
+                              navigate(item.path);
+                              setMenus(prev => ({ ...prev, [group.key]: false }));
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Botão mobile */}
             <div className="md:hidden flex items-center">
               <button
-                onClick={toggleMobileMenu}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-white hover:text-gray-300"
               >
-                <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2"
+                  viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                    d={isMobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
                 </svg>
               </button>
             </div>
 
-            {/* Perfil e logout (desktop) - mais compacto */}
             <div className="hidden md:flex items-center space-x-3">
-              <span className="text-white text-sm truncate max-w-xs">{user?.name}</span>
+              <span className="text-white text-sm">{user?.name}</span>
               <button
                 onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm whitespace-nowrap"
+                className="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
               >
                 Sair
               </button>
@@ -180,150 +166,86 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
         </div>
 
-        {/* Menu mobile */}
+        {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {[
-                { path: '/', label: 'Dashboard' },
-                { path: '/agendamentos', label: 'Agendamentos' },
-                { path: '/contratos', label: 'Contratos' },
-                { path: '/lancamentos', label: 'Lançamentos' },
-                { path: '/calendario', label: 'Calendário' },
-              ].map((item) => (
-                <a
-                  key={item.path}
-                  href={item.path}
-                  onClick={(e) => { e.preventDefault(); navigate(item.path); setIsMobileMenuOpen(false); }}
-                  className="text-white hover:bg-gray-700 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  {item.label}
-                </a>
-              ))}
+          <div className="md:hidden px-2 pt-2 pb-3 space-y-1">
+            <button
+              onClick={() => { navigate('/'); setIsMobileMenuOpen(false); }}
+              className="block text-white px-3 py-2 rounded-md"
+            >
+              <Home size={18} className="inline mr-1" /> Home
+            </button>
 
-              {/* Dropdown Estoque mobile */}
-              <div>
+            {simpleLinks.map(item => (
+              <button
+                key={item.path}
+                onClick={() => { navigate(item.path); setIsMobileMenuOpen(false); }}
+                className="block text-white px-3 py-2 rounded-md"
+              >
+                {item.label}
+              </button>
+            ))}
+
+            {menuGroups.map(group => (
+              <div key={group.key}>
                 <button
-                  onClick={() => setIsEstoqueOpen((prev) => !prev)}
-                  className="text-white hover:bg-gray-700 w-full text-left px-3 py-2 rounded-md text-base font-medium flex justify-between items-center"
+                  onClick={() => toggleMenu(group.key)}
+                  className="w-full text-left text-white px-3 py-2 rounded-md flex justify-between items-center"
                 >
-                  Estoque
-                  <svg
-                    className={`ml-1 h-4 w-4 transform ${isEstoqueOpen ? 'rotate-180' : ''}`}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
+                  {group.label}
+                  <svg className={`h-4 w-4 transform ${menus[group.key] ? 'rotate-180' : ''}`} fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.586l3.71-3.354a.75.75 0 111.02 1.1l-4 3.75a.75.75 0 01-1.02 0l-4-3.75a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd" />
                   </svg>
                 </button>
-                {isEstoqueOpen && (
+                {menus[group.key] && (
                   <div className="pl-4">
-                    {[
-                      { path: '/entradas-estoque', label: 'Entrada de Estoque' },
-                      { path: '/saidas-estoque', label: 'Saída de Estoque' },
-                      { path: '/estoque-atual', label: 'Estoque Atual' }
-                    ].map((item) => (
-                      <a
+                    {group.items.map(item => (
+                      <button
                         key={item.path}
-                        href={item.path}
-                        onClick={(e) => { e.preventDefault(); navigate(item.path); setIsMobileMenuOpen(false); }}
-                        className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                        onClick={() => {
+                          navigate(item.path);
+                          setMenus(prev => ({ ...prev, [group.key]: false }));
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="block text-gray-300 hover:bg-gray-700 px-3 py-2 rounded-md"
                       >
                         {item.label}
-                      </a>
+                      </button>
                     ))}
                   </div>
                 )}
               </div>
+            ))}
 
-              {/* Dropdown Cadastros mobile */}
-              <div>
-                <button
-                  onClick={toggleCadastros}
-                  className="text-white hover:bg-gray-700 w-full text-left px-3 py-2 rounded-md text-base font-medium flex justify-between items-center"
-                >
-                  Cadastros
-                  <svg
-                    className={`ml-1 h-4 w-4 transform ${isCadastrosOpen ? 'rotate-180' : ''}`}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-                {isCadastrosOpen && (
-                  <div className="pl-4">
-                    {[
-                      { path: '/pacientes', label: 'Pacientes' },
-                      { path: '/itens', label: 'Itens' },
-                      { path: '/locais-atendimento', label: 'Locais de Atendimento' },
-                      { path: '/procedimentos', label: 'Procedimentos' },
-                      { path: '/equipes', label: 'Equipes' },
-                      { path: '/categorias-procedimento', label: 'Categorias de Procedimento' },
-                      { path: '/refeicoes', label: 'Refeições' },
-                      { path: '/fornecedores', label: 'Fornecedores' },
-                      { path: '/naturezas', label: 'Naturezas' }
-                    ].map((item) => (
-                      <a
-                        key={item.path}
-                        href={item.path}
-                        onClick={(e) => { e.preventDefault(); navigate(item.path); }}
-                        className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-                      >
-                        {item.label}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Perfil e logout (mobile) */}
-            <div className="pt-4 pb-3 border-t border-gray-700">
-              <div className="flex items-center px-5">
-                <div className="text-base font-medium text-white truncate">{user?.name}</div>
-              </div>
-              <div className="mt-3 px-2">
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white hover:bg-gray-700"
-                >
-                  Sair
-                </button>
-              </div>
+            <div className="border-t border-gray-700 pt-4">
+              <span className="block text-white px-3 py-2">{user?.name}</span>
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-3 py-2 rounded-md text-white hover:bg-gray-700"
+              >
+                Sair
+              </button>
             </div>
           </div>
         )}
       </nav>
 
-      {/* Conteúdo principal - agora com largura mais adaptável */}
+      {/* Conteúdo */}
       <main className="flex-1">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full max-w-[1800px]"> {/* Aumentei o max-width */}
-          {/* Container com altura flexível */}
-          <div className="min-h-[calc(100vh-12rem)] w-full">
-            {children}
-          </div>
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {children}
         </div>
       </main>
 
-      {/* Rodapé ajustado */}
-      <footer className="bg-[#07233B] text-white py-4 w-full">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 2xl:px-16 text-center text-sm">
-          © {new Date().getFullYear()} INMECAP - Sistema de Gestão
-        </div>
+      {/* Footer */}
+      <footer className="bg-[#07233B] text-white py-4 w-full text-center text-sm">
+        © {new Date().getFullYear()} INMECAP - Sistema de Gestão
       </footer>
     </div>
   );
-}
+};
 
 export default Layout;

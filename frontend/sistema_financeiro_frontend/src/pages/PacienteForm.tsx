@@ -15,7 +15,14 @@ const PacienteForm: React.FC = () => {
     telefone: '',
     email: '',
     endereco: '',
-    nacionalidade: ''
+    nacionalidade: '',
+    logradouro: '',
+    numero: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    cep: '',
+    complemento: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -39,7 +46,15 @@ const PacienteForm: React.FC = () => {
             telefone: data.telefone || '',
             email: data.email || '',
             endereco: data.endereco || '',
-            nacionalidade: data.nacionalidade || ''
+            nacionalidade: data.nacionalidade || '',
+            logradouro: data.logradouro || '',
+            numero: data.numero || '',
+            bairro: data.bairro || '',
+            cidade: data.cidade || '',
+            estado: data.estado || '',
+            cep: data.cep || '',
+            complemento: data.complemento || ''
+
           });
         } catch (err: any) {
           setError('Erro ao carregar dados do paciente.');
@@ -198,19 +213,104 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
               
               <div className="sm:col-span-2">
-                <label htmlFor="endereco" className="block text-sm font-medium text-gray-700">
-                  Endereço
+                <label htmlFor="logradouro" className="block text-sm font-medium text-gray-700">
+                  Rua
                 </label>
                 <textarea
-                  name="endereco"
-                  id="endereco"
-                  rows={3}
-                  value={formData.endereco}
+                  name="logradouro"
+                  id="logradouro"
+                  rows={1}
+                  value={formData.logradouro}
                   onChange={handleChange}
                   className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
             </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+                <label htmlFor="numero" className="block text-sm font-medium text-gray-700">
+                  Numero
+                </label>
+                <input
+                  type="number"
+                  name="numero"
+                  id="numero"
+                  value={formData.numero}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="bairro" className="block text-sm font-medium text-gray-700">
+                  Bairro
+                </label>
+                <input
+                  type="text"
+                  name="bairro"
+                  id="bairro"
+                  value={formData.bairro}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cidade" className="block text-sm font-medium text-gray-700">
+                  Cidade
+                </label>
+                <input
+                  type="text"
+                  name="cidade"
+                  id="cidade"
+                  value={formData.cidade}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="estado" className="block text-sm font-medium text-gray-700">
+                  Estado (ex: PR)
+                </label>
+                <input
+                  type="text"
+                  name="estado"
+                  id="estado"
+                  value={formData.estado}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cep" className="block text-sm font-medium text-gray-700">
+                  Cep
+                </label>
+                <input
+                  type="text"
+                  name="cep"
+                  id="cep"
+                  value={formData.cep}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">
+                  Complemento
+                </label>
+                <input
+                  type="text"
+                  name="complemento"
+                  id="complemento"
+                  value={formData.complemento}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
             
             <div className="mt-6 flex items-center justify-end space-x-3">
               <button
@@ -228,6 +328,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 {saving ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
+          </div>
           </form>
         </div>
       </div>

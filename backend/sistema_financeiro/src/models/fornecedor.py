@@ -16,7 +16,7 @@ class Fornecedor(db.Model):
     endereco = db.Column(db.String(255), nullable=True)
     data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
     
-    lancamentos = db.relationship('LancamentoFinanceiro', backref='fornecedor', lazy=True)
+    lancamentos_financeiros = db.relationship('LancamentoFinanceiro', back_populates='fornecedor')
     
     def __repr__(self):
         return f'<Fornecedor {self.nome}>'

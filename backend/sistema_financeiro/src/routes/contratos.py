@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from src.models.contrato import Contrato, db
 from src.models.paciente import Paciente
-from src.models.agendamento import Agendamento
+from src.models.agendamento_cirurgico import AgendamentoCirurgico
 from src.services.clicksign_service import gerar_contrato_clicksign
 from num2words import num2words
 from datetime import datetime, date
@@ -27,9 +27,9 @@ def listar_contratos():
             "data_criacao": contrato.data_criacao.isoformat(),
             "data_atualizacao": contrato.data_atualizacao.isoformat(),
             "paciente": contrato.paciente.nome,
-            "procedimento_nome": contrato.agendamento.procedimento.nome
+            "procedimento_nome": contrato.agendamento_cirurgico.procedimento.nome
         })
-
+    
     return jsonify(resultado), 200
 
 @contratos_bp.route('/<int:id>', methods=['GET'])
@@ -60,14 +60,14 @@ def criar_contrato():
     """Endpoint para criar um novo contrato"""
     if not request.is_json:
         return jsonify({"msg": "Requisição deve ser JSON"}), 400
-    print(request.json.get('valor_restante'))
+    
     # Campos obrigatórios
     paciente_id = request.json.get('paciente_id', None)
-    agendamento_id = request.json.get('agendamento_id', None)
+    agendamento_cirurgico_id = request.json.get('agendamento_id', None)
     valor_sinal = request.json.get('valor_sinal', None)
     valor_restante = request.json.get('valor_restante', None)
     
-    if paciente_id is None or agendamento_id is None or valor_sinal is None or valor_restante is None:
+    if paciente_id is None or agendamento_cirurgico_id is None or valor_sinal is None or valor_restante is None:
         return jsonify({"msg": "Paciente, agendamento, valor do sinal e valor restante são obrigatórios"}), 400
     
     # Verifica se paciente existe
@@ -96,7 +96,7 @@ def criar_contrato():
     novo_contrato = Contrato(
         identificador_contrato=identificador_contrato,
         paciente_id=paciente_id,
-        agendamento_id=agendamento_id,
+        agendamento_cirurgico_id=agendamento_cirurgico_id,
         valor_sinal=valor_sinal,
         valor_restante=valor_restante,
         status=request.json.get('status', 'ativo')
@@ -111,7 +111,7 @@ def criar_contrato():
             "id": novo_contrato.id,
             "identificador_contrato": novo_contrato.identificador_contrato,
             "paciente_id": novo_contrato.paciente_id,
-            "agendamento_id": novo_contrato.agendamento_id,
+            "agendamento_cirurgico_id": novo_contrato.agendamento_cirurgico_id,
             "valor_sinal": float(novo_contrato.valor_sinal),
             "valor_restante": float(novo_contrato.valor_restante),
             "status": novo_contrato.status,
@@ -140,7 +140,7 @@ def atualizar_contrato(id):
         contrato.paciente_id = request.json['paciente_id']
     
     if 'agendamento_id' in request.json:
-        contrato.agendamento_id = request.json['agendamento_id']
+        contrato.agendamento_cirurgico_id = request.json['agendamento_id']
     
     if 'valor_sinal' in request.json:
         try:
@@ -223,7 +223,7 @@ def listar_contratos_por_paciente(paciente_id):
 def gerar_contrato_clicksign_handler(contrato_id):
     contrato = Contrato.query.get_or_404(contrato_id)
     paciente = Paciente.query.get_or_404(contrato.paciente_id)
-    agendamento = Agendamento.query.get_or_404(contrato.agendamento_id)
+    agendamento = AgendamentoCirurgico.query.get_or_404(contrato.agendamento_cirurgico_id)
     dados = {
         "nomeContratante": paciente.nome,
         "nacionalidadeContratante": paciente.nacionalidade,
@@ -236,8 +236,8 @@ def gerar_contrato_clicksign_handler(contrato_id):
         "crmMedico": "CRM/SC 33460",
         "cpfMedico": "016.208.576-18",
         "dtProcedimento": agendamento.data_agendamento.strftime("%Y-%m-%d"),
-        "valorTotalNumerico": contrato.agendamento.valor_geral_venda,
-        "valorTotalExtenso": num2words(contrato.agendamento.valor_geral_venda, lang='pt_BR'),
+        "valorTotalNumerico": contrato.agendamento_cirurgico.valor_geral_venda,
+        "valorTotalExtenso": num2words(contrato.agendamento_cirurgico.valor_geral_venda, lang='pt_BR'),
         "valorSinalNumerico": contrato.valor_sinal,
         "valorSinalExtenso": num2words(contrato.valor_sinal, lang='pt_BR'),
         "valorRestanteNumerico": contrato.valor_restante,

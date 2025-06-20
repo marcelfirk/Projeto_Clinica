@@ -49,8 +49,8 @@ export const authService = {
     return response.data;
   },
   
-  register: async (name: string, email: string, password: string) => {
-    const response = await api.post('/auth/register', { name, email, password });
+  register: async (name: string, email: string, password: string, role: string) => {
+    const response = await api.post('/auth/register', { name, email, password, role });
     return response.data;
   },
   
@@ -69,6 +69,16 @@ export const authService = {
   
   isAuthenticated: () => {
     return !!localStorage.getItem('token');
+  },
+
+  getAll: async () => {
+    const response = await api.get('/auth/users');
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await api.delete(`/auth/users/${id}`);
+    return response.data;
   }
 };
 
@@ -376,32 +386,32 @@ export const refeicaoService = {
 // Serviços para Agendamentos
 export const agendamentoService = {
   getAll: async () => {
-    const response = await api.get('/agendamentos');
+    const response = await api.get('/agendamentos-cirurgicos');
     return response.data;
   },
   
   getById: async (id: number) => {
-    const response = await api.get(`/agendamentos/${id}`);
+    const response = await api.get(`/agendamentos-cirurgicos/${id}`);
     return response.data;
   },
   
   create: async (agendamento: any) => {
-    const response = await api.post('/agendamentos', agendamento);
+    const response = await api.post('/agendamentos-cirurgicos', agendamento);
     return response.data;
   },
   
   update: async (id: number, agendamento: any) => {
-    const response = await api.put(`/agendamentos/${id}`, agendamento);
+    const response = await api.put(`/agendamentos-cirurgicos/${id}`, agendamento);
     return response.data;
   },
   
   delete: async (id: number) => {
-    const response = await api.delete(`/agendamentos/${id}`);
+    const response = await api.delete(`/agendamentos-cirurgicos/${id}`);
     return response.data;
   },
 
   registrarServico: async (id: number, servico: string) => {
-  const response = await api.post(`/agendamentos/${id}/registrar-servico`, { servico });
+  const response = await api.post(`/agendamentos-cirurgicos/${id}/registrar-servico`, { servico });
   return response.data;
   },
 
@@ -530,6 +540,172 @@ export const saidaEstoqueService = {
 export const estoqueAtualService = {
   getAll: async () => {
     const response = await api.get('/estoque_atual'); // <-- corrigido aqui
+    return response.data;
+  }
+};
+
+// Tipo Tratamento
+export const tipoTratamentoService = {
+  getAll: async () => {
+    const response = await api.get('/tipos-tratamento');
+    return response.data;
+  },
+
+  getById: async (id: number) => {
+    const response = await api.get(`/tipos-tratamento/${id}`);
+    return response.data;
+  },
+
+  create: async (data: any) => {
+    const response = await api.post('/tipos-tratamento', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: any) => {
+    const response = await api.put(`/tipos-tratamento/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await api.delete(`/tipos-tratamento/${id}`);
+    return response.data;
+  }
+};
+
+// Serviço para PacoteTratamento
+export const pacoteTratamentoService = {
+  getAll: async () => {
+    const response = await api.get('/pacotes-tratamento');
+    return response.data;
+  },
+
+  getById: async (id: number) => {
+    const response = await api.get(`/pacotes-tratamento/${id}`);
+    return response.data;
+  },
+
+  getByPaciente: async (pacienteId: number) => {
+    const response = await api.get(`/pacotes-tratamento/paciente/${pacienteId}`);
+    return response.data;
+  },
+
+  getPendentes: async () => {
+    const response = await api.get('/pacotes-tratamento/pendentes');
+    return response.data;
+  },
+
+  create: async (data: any) => {
+    const response = await api.post('/pacotes-tratamento', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: any) => {
+    const response = await api.put(`/pacotes-tratamento/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await api.delete(`/pacotes-tratamento/${id}`);
+    return response.data;
+  },
+
+  incrementarSessao: async (id: number) => {
+    const response = await api.post(`/pacotes-tratamento/${id}/incrementar-sessao`);
+    return response.data;
+  }
+};
+
+
+// Serviço para AgendamentoSessao
+export const agendamentoSessaoService = {
+  getAll: async () => {
+    const response = await api.get('/agendamentos-sessao');
+    return response.data;
+  },
+
+  getById: async (id: number) => {
+    const response = await api.get(`/agendamentos-sessao/${id}`);
+    return response.data;
+  },
+
+  getByPaciente: async (pacienteId: number) => {
+    const response = await api.get(`/agendamentos-sessao/paciente/${pacienteId}`);
+    return response.data;
+  },
+
+  getByPacote: async (pacoteId: number) => {
+    const response = await api.get(`/agendamentos-sessao/pacote/${pacoteId}`);
+    return response.data;
+  },
+
+  create: async (data: any) => {
+    const response = await api.post('/agendamentos-sessao', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: any) => {
+    const response = await api.put(`/agendamentos-sessao/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await api.delete(`/agendamentos-sessao/${id}`);
+    return response.data;
+  },
+
+  marcarRealizada: async (id: number) => {
+    const response = await api.post(`/agendamentos-sessao/${id}/marcar-realizada`);
+    return response.data;
+  }
+};
+
+
+// Agendamento Cirurgico
+export const agendamentoCirurgicoService = {
+  getAll: async () => {
+    const response = await api.get('/agendamentos-cirurgicos');
+    return response.data;
+  },
+
+  getById: async (id: number) => {
+    const response = await api.get(`/agendamentos-cirurgicos/${id}`);
+    return response.data;
+  },
+
+  create: async (data: any) => {
+    const response = await api.post('/agendamentos-cirurgicos', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: any) => {
+    const response = await api.put(`/agendamentos-cirurgicos/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await api.delete(`/agendamentos-cirurgicos/${id}`);
+    return response.data;
+  },
+
+  registrarServico: async (id: number, servico: string) => {
+    const response = await api.post(`/agendamentos-cirurgicos/${id}/registrar-servico`, { servico });
+    return response.data;
+  }
+};
+
+export const boletoService = {
+  emitir: async (data: any) => {
+    const response = await api.post('/boletos/emitir', data);
+    return response.data;
+  },
+
+  getById: async (id: number) => {
+    const response = await api.get(`/boletos/${id}`);
+    return response.data;
+  },
+
+  getAll: async () => {
+    const response = await api.get('/boletos');
     return response.data;
   }
 };

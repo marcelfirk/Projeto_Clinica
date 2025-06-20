@@ -13,7 +13,7 @@ import ContratoForm from './pages/ContratoForm';
 import Fornecedores from './pages/Fornecedores';
 import FornecedorForm from './pages/FornecedorForm';
 import Lancamentos from './pages/Lancamentos';
-import LancamentoForm from './pages/LancamentoForm';
+import LancamentoForm from './pages/LancamentoForm'; // ATUALIZADO
 import Itens from './pages/Itens';
 import ItensForm from './pages/ItensForms';
 import LocaisAtendimento from './pages/LocaisAtendimento';
@@ -26,8 +26,6 @@ import CategoriasProcedimento from './pages/CategoriasProcedimento';
 import CategoriaProcedimentoForm from './pages/CategoriaProcedimentoForm';
 import Refeicoes from './pages/Refeicoes';
 import RefeicaoForm from './pages/RefeicaoForm';
-import Agendamentos from './pages/Agendamentos';
-import AgendamentoForm from './pages/AgendamentoForm';
 import Calendario from './pages/Calendario';
 import Naturezas from './pages/Naturezas';
 import NaturezaForm from './pages/NaturezaForm';
@@ -36,6 +34,17 @@ import NovaEntradaEstoque from './pages/EntradaEstoqueForm'
 import SaidasEstoque from './pages/SaidasEstoque';
 import SaidaEstoqueForm from './pages/SaidaEstoqueForm';
 import EstoqueAtual from './pages/EstoqueAtual';
+
+// NOVAS IMPORTAÇÕES
+import PacotesTratamento from './pages/PacotesTratamento';
+import PacoteTratamentoForm from './pages/PacoteTratamentoForm';
+import SessoesPendentes from './pages/SessoesPendentes';
+import AgendamentosUnificados from './pages/AgendamentosUnificados'; // NOVO COMPONENTE UNIFICADO
+import AgendamentoCirurgicoForm from './pages/AgendamentoForm'; // RENOMEADO
+import AgendamentoSessaoForm from './pages/AgendamentoSessaoForm'; // NOVO
+import TipoTratamentoForm from './pages/TipoTratamentoForm';
+import TipoTratamento from './pages/TiposTratamento';
+import Usuarios from './pages/Usuarios'
 
 // Componente para rotas protegidas
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -63,20 +72,56 @@ function App() {
           </PrivateRoute>
         } />
         
-        {/* Agendamentos */}
+        {/* Agendamentos Unificados */}
         <Route path="/agendamentos" element={
           <PrivateRoute>
-            <Agendamentos />
+            <AgendamentosUnificados />
           </PrivateRoute>
         } />
-        <Route path="/agendamentos/novo" element={
+
+        {/* Agendamentos Cirúrgicos (antigo AgendamentoForm) */}
+        <Route path="/agendamentos-cirurgicos/novo" element={
           <PrivateRoute>
-            <AgendamentoForm />
+            <AgendamentoCirurgicoForm />
           </PrivateRoute>
         } />
-        <Route path="/agendamentos/:id" element={
+        <Route path="/agendamentos-cirurgicos/:id" element={
           <PrivateRoute>
-            <AgendamentoForm />
+            <AgendamentoCirurgicoForm />
+          </PrivateRoute>
+        } />
+
+        {/* Agendamentos de Sessão (novo) */}
+        <Route path="/agendamentos-sessao/novo" element={
+          <PrivateRoute>
+            <AgendamentoSessaoForm />
+          </PrivateRoute>
+        } />
+        <Route path="/agendamentos-sessao/:id" element={
+          <PrivateRoute>
+            <AgendamentoSessaoForm />
+          </PrivateRoute>
+        } />
+
+        {/* Pacotes de Tratamento (novo) */}
+        <Route path="/pacotes-tratamento" element={
+          <PrivateRoute>
+            <PacotesTratamento />
+          </PrivateRoute>
+        } />
+        <Route path="/pacotes-tratamento/novo" element={
+          <PrivateRoute>
+            <PacoteTratamentoForm />
+          </PrivateRoute>
+        } />
+        <Route path="/pacotes-tratamento/:id" element={
+          <PrivateRoute>
+            <PacoteTratamentoForm />
+          </PrivateRoute>
+        } />
+        <Route path="/pacotes-tratamento/pendentes" element={
+          <PrivateRoute>
+            <SessoesPendentes />
           </PrivateRoute>
         } />
 
@@ -307,6 +352,27 @@ function App() {
         <Route path="/estoque-atual" element={
           <PrivateRoute>
             <EstoqueAtual />
+          </PrivateRoute>
+        } />
+        {/* Tipo tratamento */}
+        <Route path="/tipo-tratamento" element={
+          <PrivateRoute>
+            <TipoTratamento />
+          </PrivateRoute>
+        } />
+        <Route path="/tipo-tratamento/novo" element={
+          <PrivateRoute>
+            <TipoTratamentoForm />
+          </PrivateRoute>
+        } />
+        <Route path="/tipo-tratamento/:id" element={
+          <PrivateRoute>
+            <TipoTratamentoForm />
+          </PrivateRoute>
+        } />
+        <Route path="/usuarios" element={
+          <PrivateRoute>
+            <Usuarios />
           </PrivateRoute>
         } />
       </Routes>

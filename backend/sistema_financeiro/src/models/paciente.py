@@ -16,6 +16,13 @@ class Paciente(db.Model):
     endereco = db.Column(db.String(255), nullable=True)
     data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
     nacionalidade = db.Column(db.String(25), nullable=True)
+    logradouro = db.Column(db.String(100), nullable=True)
+    numero = db.Column(db.String(20), nullable=True)
+    bairro = db.Column(db.String(100), nullable=True)
+    cidade = db.Column(db.String(100), nullable=True)
+    estado = db.Column(db.String(2), nullable=True)
+    cep = db.Column(db.String(10), nullable=True)
+    complemento = db.Column(db.String(100), nullable=True)
     
     contratos = db.relationship('Contrato', back_populates='paciente')
     

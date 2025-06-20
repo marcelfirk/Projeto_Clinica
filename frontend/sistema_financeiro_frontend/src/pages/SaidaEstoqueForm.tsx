@@ -42,6 +42,11 @@ const SaidaEstoqueForm: React.FC = () => {
     fetchData();
   }, [id, isEditing]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
   const handleItemChange = (index: number, field: string, value: any) => {
     const updatedItens = [...formData.itens];
     updatedItens[index][field] = value;

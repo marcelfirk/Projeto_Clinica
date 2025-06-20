@@ -44,5 +44,5 @@ def obter_estoque_atual():
             "total_entrada": total_entrada,
             "total_saida": total_saida
         })
-    print(resultado)
+    
     return jsonify(resultado), 200

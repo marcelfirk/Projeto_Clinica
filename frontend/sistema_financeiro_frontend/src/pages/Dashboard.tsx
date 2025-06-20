@@ -71,7 +71,8 @@ const Dashboard: React.FC = () => {
   return (
     <Layout>
       <div className="py-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Bem vindo ao sistema de gestão!</h1>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Dashboard geral. Vamos validar quais dados seriam interessantes de aparecerem por aqui  </h2>
         
         {loading ? (
           <div className="text-center py-10">

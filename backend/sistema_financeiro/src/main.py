@@ -1,6 +1,6 @@
 import os
 import sys
-# DON'T CHANGE THIS !!!
+# DON\'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, send_from_directory, request, jsonify
@@ -20,11 +20,18 @@ from src.routes.procedimentos import procedimentos_bp
 from src.routes.equipes import equipes_bp
 from src.routes.categorias_procedimento import categorias_procedimento_bp
 from src.routes.refeicoes import refeicoes_bp
-from src.routes.agendamentos import agendamentos_bp
+from src.routes.agendamentos import agendamentos_geral_bp
 from src.routes.naturezas_orcamentarias import naturezas_bp
 from src.routes.entradas_estoque import entradas_estoque_bp
 from src.routes.saidas_estoque import saidas_estoque_bp
 from src.routes.estoque import estoque_bp
+from src.routes.emitir_boleto import boletos_bp
+
+# NOVAS IMPORTAÇÕES DE BLUEPRINTS
+from src.routes.tipos_tratamento import tipos_tratamento_bp
+from src.routes.pacotes_tratamento import pacotes_tratamento_bp
+from src.routes.agendamentos_sessao import agendamentos_sessao_bp
+from src.routes.agendamentos_cirurgicos import agendamentos_cirurgicos_bp # RENOMEADO
 
 from src.models.contrato import db
 from src.models.itens import Item
@@ -33,8 +40,16 @@ from src.models.procedimento import Procedimento
 from src.models.equipe import Equipe
 from src.models.categoria_procedimento import CategoriaProcedimento
 from src.models.refeicao import Refeicao
-from src.models.agendamento import Agendamento
+from src.models.agendamento import Agendamento 
 from src.models.natureza_orcamentaria import Natureza
+
+# NOVAS IMPORTAÇÕES DE MODELOS
+from src.models.tipo_tratamento import TipoTratamento
+from src.models.pacote_tratamento import PacoteTratamento
+from src.models.agendamento_sessao import AgendamentoSessao
+from src.models.agendamento_cirurgico import AgendamentoCirurgico # RENOMEADO
+from src.models.lancamento_financeiro import LancamentoFinanceiro # ATUALIZADO
+from src.models.boleto import Boleto
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
@@ -81,11 +96,18 @@ app.register_blueprint(procedimentos_bp, url_prefix='/api/procedimentos')
 app.register_blueprint(equipes_bp, url_prefix='/api/equipes')
 app.register_blueprint(categorias_procedimento_bp, url_prefix='/api/categorias_procedimento')
 app.register_blueprint(refeicoes_bp, url_prefix='/api/refeicoes')
-app.register_blueprint(agendamentos_bp, url_prefix='/api/agendamentos')
+app.register_blueprint(agendamentos_geral_bp, url_prefix='/api/agendamentos') # REMOVIDO
 app.register_blueprint(naturezas_bp, url_prefix='/api/naturezas')
 app.register_blueprint(entradas_estoque_bp, url_prefix='/api/entradas_estoque')
 app.register_blueprint(saidas_estoque_bp, url_prefix='/api/saidas_estoque')
 app.register_blueprint(estoque_bp, url_prefix='/api/estoque_atual')
+
+# NOVOS REGISTROS DE BLUEPRINTS
+app.register_blueprint(tipos_tratamento_bp, url_prefix='/api/tipos-tratamento')
+app.register_blueprint(pacotes_tratamento_bp, url_prefix='/api/pacotes-tratamento')
+app.register_blueprint(agendamentos_sessao_bp, url_prefix='/api/agendamentos-sessao')
+app.register_blueprint(agendamentos_cirurgicos_bp, url_prefix='/api/agendamentos-cirurgicos')
+app.register_blueprint(boletos_bp, url_prefix='/api/boletos')
 
 
 # Configuração do banco de dados
@@ -122,3 +144,4 @@ def serve(path):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+

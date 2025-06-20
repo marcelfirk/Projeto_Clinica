@@ -208,9 +208,9 @@ const Contratos: React.FC = () => {
                         <p className="text-sm text-gray-500">
                           Paciente: {getPacienteNome(contrato.paciente_id)}
                         </p>
-                        {contrato.agendamento_id && (
+                        {contrato.agendamento_cirurgico_id && (
                           <p className="text-sm text-gray-500">
-                            Agendamento: {getAgendamentoInfo(contrato.agendamento_id)}
+                            Agendamento: {getAgendamentoInfo(contrato.agendamento_cirurgico_id)}
                           </p>
                         )}
                       </div>
